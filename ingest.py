@@ -1,46 +1,45 @@
 import os
-import tiktoken
+import glob
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
+from dotenv import load_dotenv
 
-
+# Basic Setup
+load_dotenv()
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_API_KEY"] = os.environ.get("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_PROJECT"] = "Physics_Tutor_RAG"
 
-pdf_volumes = [
-    {"path": r"C:\Users\Aarna\OneDrive\Physics_rag_tutor\data\university_physics_volume_1.pdf", "name": "University Physics Volume 1"},
-    {"path": r"C:\Users\Aarna\OneDrive\Physics_rag_tutor\data\university_physics_volume_2.pdf", "name": "University Physics Volume 2"},
-    {"path": r"C:\Users\Aarna\OneDrive\Physics_rag_tutor\data\university_physics_volume_3.pdf", "name": "University Physics Volume 3"}
-]
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+data_folder = os.path.join(BASE_DIR, "data")
+db_path = os.path.join(BASE_DIR, "chroma_db")
+
+
+pdf_files = glob.glob(os.path.join(data_folder, "*.pdf"))
 all_chunks = []
-
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
-for volume in pdf_volumes:
-    if os.path.exists(volume["path"]):
-        loader = PyPDFLoader(volume["path"])
-        docs = loader.load()
-        chunks = text_splitter.split_documents(docs)
+print("\n PHASE 1 Loading up Ingestion Engine...")
+print(f"Found {len(pdf_files)} PDF(s) in the data folder.")
 
-        for chunk in chunks:
-            chunk.metadata["volume"] = volume["name"]
+for volume in pdf_files:
+    
+    volume_name = os.path.basename(volume)
+    print(f"Extracting: {volume_name}")
+    loader = PyPDFLoader(volume)
+    docs = loader.load()
+    chunks = text_splitter.split_document(docs)
+
+    for chunk in chunks:
         
-        all_chunks.extend(chunks)
-    else:
-        print(f"File not found: {volume['path']}")
+        chunk.metadata["volume"] = volume_name
+
+    all_chunks.extend(chunks)
+print(f"Succesfully extracted {len(all_chunks)} total chunks.")
 
 
-embeddings = HuggingFaceEmbeddings(model_name = "all-MiniLM-L6-v2")
-embd = embeddings.embed_documents([chunk.page_content for chunk in all_chunks])
-
-Chroma.from_documents(
-    documents=all_chunks, 
-    embedding=embeddings, 
-    persist_directory=r"C:\Users\Aarna\OneDrive\Physics_rag_tutor\chroma_db"
-    )
 
 
