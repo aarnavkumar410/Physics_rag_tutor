@@ -31,7 +31,7 @@ for volume in pdf_files:
     print(f"Extracting: {volume_name}")
     loader = PyPDFLoader(volume)
     docs = loader.load()
-    chunks = text_splitter.split_document(docs)
+    chunks = text_splitter.split_documents(docs)
 
     for chunk in chunks:
         
