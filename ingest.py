@@ -22,7 +22,7 @@ pdf_files = glob.glob(os.path.join(data_folder, "*.pdf"))
 all_chunks = []
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
-print("\n PHASE 1 Loading up Ingestion Engine...")
+print("\nPHASE 1 Loading up Ingestion Engine...")
 print(f"Found {len(pdf_files)} PDF(s) in the data folder.")
 
 for volume in pdf_files:
@@ -40,6 +40,21 @@ for volume in pdf_files:
     all_chunks.extend(chunks)
 print(f"Succesfully extracted {len(all_chunks)} total chunks.")
 
+
+# Database Storage
+print("\nPHASE 2 building a neural network for vector embeddings...")
+print("This step could take a few minutes for massive datasets)")
+
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+print("\nPHASE 3 Writing vectors to Chroma database")
+Chroma.from_documents(
+    documents=all_chunks, 
+    embedding=embeddings, 
+    persist_directory=db_path
+)
+
+print("\nComplete! The database is ready for the RAG agent.\n")
 
 
 
