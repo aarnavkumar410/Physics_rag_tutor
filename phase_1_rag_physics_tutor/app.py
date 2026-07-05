@@ -1,4 +1,6 @@
+import os
 import sys
+from huggingface_hub import logging
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaLLM
@@ -6,16 +8,24 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser 
 from operator import itemgetter
+from dotenv import load_dotenv
+load_dotenv()
 
 
-#from langchain_ollama import OllamaLLM
-print("Initializing retriever and model...")
+print("Initializing retriever and model")
 
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(CURRENT_DIR)
+DB_PATH = os.path.join(ROOT_DIR, "chroma_db")
+
+logging.set_verbosity_error()
+if not os.environ.get("HF_TOKEN"):
+    print("\n[Optimization Note]: Running unauthenticated. Add HF_TOKEN to your .env file for faster downloads.")
+
 
 vector_store = Chroma(
-    persist_directory=r"C:\Users\Aarna\OneDrive\Physics_rag_tutor\chroma_db",
-    embedding_function=embeddings
+    persist_directory=DB_PATH,
+    embedding_function=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     )
 
 retriever = vector_store.as_retriever(search_kwargs={"k": 3})
