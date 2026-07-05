@@ -1,5 +1,8 @@
 import os
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 import glob
+from huggingface_hub import logging
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -11,7 +14,7 @@ load_dotenv()
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_API_KEY"] = os.environ.get("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_PROJECT"] = "Physics_Tutor_RAG"
-
+os.environ["HF_HUB_VERBOSITY"] = "error"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(BASE_DIR, "data")
@@ -45,6 +48,10 @@ print(f"Succesfully extracted {len(all_chunks)} total chunks.")
 print("\nPHASE 2 building a neural network for vector embeddings...")
 print("This step could take a few minutes for massive datasets)")
 
+logging.set_verbosity_error()
+if not os.environ.get("HF_TOKEN"):
+    print("\n[Optimization Note]: Running unauthenticated. Add HF_TOKEN to your .env file for faster downloads.")
+
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 print("\nPHASE 3 Writing vectors to Chroma database")
@@ -55,6 +62,4 @@ Chroma.from_documents(
 )
 
 print("\nComplete! The database is ready for the RAG agent.\n")
-
-
 
