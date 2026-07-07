@@ -46,7 +46,7 @@ print(f"Succesfully extracted {len(all_chunks)} total chunks.")
 
 # Database Storage
 print("\nPHASE 2 building a neural network for vector embeddings...")
-print("This step could take a few minutes for massive datasets)")
+print("(This step could take a few minutes for massive datasets)")
 
 logging.set_verbosity_error()
 if not os.environ.get("HF_TOKEN"):
