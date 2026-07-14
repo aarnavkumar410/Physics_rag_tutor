@@ -67,6 +67,8 @@ Once the database is built(chroma_db/), run the main application to start asking
 python phase_1_rag_physics_tutor/app.py
 ```
 
+## Acknowledgements
 
+Google Gemini was used to assist with the project planning and syntax reference. The core implementation and logic were written independently.
 
 
